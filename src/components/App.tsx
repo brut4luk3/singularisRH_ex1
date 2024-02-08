@@ -1,41 +1,45 @@
 import React, { useState } from 'react';
-import axios from 'axios';
 import WriteConfig from '../components/WriteConfig';
-import UploadJson from '../components/UploadJson';
 import '../styles/App.css';
 
 function App() {
   const [showWriteConfig, setShowWriteConfig] = useState(false);
-  const [showUploadJson, setShowUploadJson] = useState(false);
+  const [configContent, setConfigContent] = useState('');
 
-  const fetchConfig = async () => {
-    try {
-      const response = await axios.get('/api/config');
-      console.log(response.data);
-      alert('Configuração carregada com sucesso.');
-    } catch (error) {
-      alert('Houve um erro ao buscar a configuração.');
+  const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files ? event.target.files[0] : null;
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const text = e.target?.result;
+        if (text) {
+          const obj = JSON.parse(text.toString());
+          if (Object.keys(obj).length === 0) {
+            setConfigContent("O arquivo JSON está vazio.");
+          } else {
+            setConfigContent(text.toString());
+          }
+        } else {
+          setConfigContent("Não foi possível ler o arquivo ou o arquivo está vazio.");
+        }
+      };
+      reader.onerror = () => {
+        setConfigContent("Erro ao ler o arquivo.");
+      };
+      reader.readAsText(file);
     }
-  };
+  };  
 
   const submitConfig = async (serverName: string, serverIp: string, serverPassword: string) => {
-    try {
-      await axios.post('/api/config', { server_name: serverName, server_ip: serverIp, server_password: serverPassword });
-      alert('Configuração salva com sucesso!');
-      setShowWriteConfig(false);
-    } catch (error) {
-      alert('Erro ao salvar configuração!');
-    }
-  };
-
-  const handleUpload = (file: File) => {
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-      const text = e.target?.result;
-      console.log(text);
-      setShowUploadJson(false);
-    };
-    reader.readAsText(file);
+    const configData = { serverName, serverIp, serverPassword };
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(configData, null, 2));
+    const downloadAnchorNode = document.createElement('a');
+    downloadAnchorNode.setAttribute("href", dataStr);
+    downloadAnchorNode.setAttribute("download", "config.json");
+    document.body.appendChild(downloadAnchorNode);
+    downloadAnchorNode.click();
+    downloadAnchorNode.remove();
+    setShowWriteConfig(false);
   };
 
   return (
@@ -45,43 +49,24 @@ function App() {
           <h2>Hello there!</h2>
           <h3>What we're gonna do today?</h3>
         </div>
-        <div className='displayScreen'></div>
-        <div>
-          <button id='read' onClick={fetchConfig}>Read configuration</button>
-          <button id='write' onClick={() => setShowWriteConfig(true)}>Write configuration</button>
+        <div className='displayScreen'>
+          <pre>{configContent}</pre>
         </div>
-
-        <UploadJson onClick={() => setShowUploadJson(true)} />
-
+        <div>
+          <button id='read' onClick={() => document.getElementById('file-upload')?.click()}>
+            Read configuration
+          </button>
+          <input id="file-upload" type="file" accept=".json" onChange={handleUpload} style={{ display: 'none' }} />
+          <button id='write' onClick={() => setShowWriteConfig(true)}>
+            Write configuration
+          </button>
+        </div>
         {showWriteConfig && (
-          <>
-            <div className="modal-backdrop" onClick={() => setShowWriteConfig(false)} />
-            <div className="modal">
+          <div className="modal-backdrop" onClick={() => setShowWriteConfig(false)}>
+            <div className="modal" onClick={e => e.stopPropagation()}>
               <WriteConfig onSubmit={submitConfig} />
             </div>
-          </>
-        )}
-
-        {showUploadJson && (
-          <>
-            <div className="modal-backdrop" onClick={() => setShowUploadJson(false)} />
-            <div className="modal">
-              <div className='uploadFilebutton'>
-                <p>Click to upload your .json file:</p>
-                <label htmlFor="file-upload" className="file-upload-btn">+</label>
-                <input
-                  id="file-upload"
-                  type="file"
-                  accept=".json"
-                  onChange={(e) => {
-                    const file = e.target.files ? e.target.files[0] : null;
-                    if (file) handleUpload(file);
-                  }}
-                  style={{ display: 'none' }}
-                />
-              </div>
-            </div>
-          </>
+          </div>
         )}
       </header>
     </div>

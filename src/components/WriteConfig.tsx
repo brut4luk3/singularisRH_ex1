@@ -1,4 +1,3 @@
-// components/WriteConfig.tsx
 import React, { useState } from 'react';
 import '../styles/WriteConfig.css'
 
