@@ -1,0 +1,32 @@
+.write-config-form {
+    display: flex;
+    flex-direction: column;
+}
+
+.input-field,
+.input-field.top,
+.input-field.middle,
+.input-field.bottom {
+    width: 200px;
+    box-sizing: border-box;
+    padding: 15px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border: 1px solid #ccc;
+}
+
+.input-field.top {
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+}
+
+.input-field.bottom {
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+}
+
+button {
+    padding: 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    border: transparent;
+}
